@@ -35,11 +35,11 @@ arguments <- commandArgs(trailingOnly=TRUE)
 option_list <- list(
   # Note: it's not necessary for the names to match here, it's just a convention
   # to keep things consistent.
-  make_option("--input.file", dest="input.file"),
+  make_option("--input.seurat.rds.file", dest="input.seurat.rds.file", default="notARealFilename.impossible"),
   make_option("--output.file", dest="output.file"),
-  make_option("--max_dim", dest="max_dim", type="integer"),
+  make_option("--input.10x.file", dest="input.10x.file", default="notARealFilename.impossible"),
   make_option("--resolution", dest="resolution", type="double"),
-  make_option("--reduction", dest="reduction")
+  make_option("--root.cells", dest="root.cells")
 )
 
 # Parse the command line arguments with the option list, printing the result
@@ -50,65 +50,68 @@ opts <- opt$options
 
 mat=NULL
 
-if (file.exists(opts$input.file)){
-    # load Seurat object mat from Kivil's earlier analysis
-    load(opts$input.file, verbose=TRUE)	
-    #pbmc = readRDS(opts$input.file)
+if (file.exists(opts$input.seurat.rds.file)){
+    load(opts$input.seurat.rds.file, verbose=TRUE)	
+
+    ############### Converting Seurat object to Monocle ###############
+
+    # Extract expression data (raw UMI counts) from the Seurat object
+    # We are extracting raw UMI counts since Monocle 3 is designed
+    # for use with absolute transcript counts (e.g. from UMI experiments)
+    data <- GetAssayData(object = mat, slot = "counts")
+
+    # Extract phenotype data (cell metadata) from the Seurat object
+    pData <- mat@meta.data
+
+    # Extract feature data from the Seurat object
+    fData <- data.frame(gene_short_name = row.names(data), row.names = row.names(data))
+
+    # Construct a Monocle CDS (cell_data_set) object
+    cds <- new_cell_data_set(data, cell_metadata = pData, gene_metadata = fData)
+
+    # Construct and assign the made up partition
+    recreate.partition <- c(rep(1, length(cds@colData@rownames)))
+    names(recreate.partition) <- cds@colData@rownames
+    recreate.partition <- as.factor(recreate.partition)
+    cds@clusters@listData[["UMAP"]][["partitions"]] <- recreate.partition
+
+    # Assign the cluster info
+    list_cluster <- Idents(object = mat)
+    names(list_cluster) <- cds@colData@rownames
+    cds@clusters@listData[["UMAP"]][["clusters"]] <- list_cluster
+
+    # A space-holder to essentially fill out louvain parameters
+    cds@clusters@listData[["UMAP"]][["louvain_res"]] <- "NA"
+
+    # Assign UMAP coordinate
+    # cds@reducedDims@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
+    cds@reduce_dim_aux@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
+    cds@reduce_dim_aux@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
+
+    # Assign feature loading for downstream module analysis
+    cds@preprocess_aux$gene_loadings <- mat@reductions[["pca"]]@feature.loadings
+
+    # A space-holder needed for order_cells() function later on
+    rownames(cds@principal_graph_aux[['UMAP']]$dp_mst) <- NULL
+    colnames(cds@reduce_dim_aux@listData[["UMAP"]]) <- NULL
+    cds@int_colData@listData$reducedDims@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
+
+    #  these other ways for colnames are for different versions of the packages
+    #colnames(cds@reducedDims$UMAP) <- NULL
+    #colnames(cds@reduce_dim_aux@listData[["UMAP"]]) <- NULL
+} else if (file.exists(opts$input.10x.file)){
+    # instead of a seurat object, we are getting a zipped 10x genomics file
+    
+    # TODO:  Check if outs dir is duplicated and move files if necessary
+    untar(opts$input.10x.file, exdir="./10x_data/outs")
+
+    cds <- load_cellranger_data("./10x_data")    
+    cds <- preprocess_cds(cds, num_dim = 100)
+    cds <- align_cds(cds)
+    cds <- reduce_dimension(cds)
+    cds <- cluster_cells(cds) 
+
 }
-#pdf(paste(opts$output.file, ".pdf", sep=""))
-#pbmc <- FindNeighbors(pbmc, dims = 1:opts$max_dim)
-#pbmc <- FindClusters(pbmc, resolution = opts$resolution)
-#pbmc <- RunUMAP(pbmc, dims = 1:opts$max_dim)
-#DimPlot(pbmc, reduction = opts$reduction)
-#saveRDS(pbmc, file = paste(opts$output.file, ".rds", sep=""))
-
-############### Converting Seurat object to Monocle ###############
-
-# Extract expression data (raw UMI counts) from the Seurat object
-# We are extracting raw UMI counts since Monocle 3 is designed
-# for use with absolute transcript counts (e.g. from UMI experiments)
-data <- GetAssayData(object = mat, slot = "counts")
-
-# Extract phenotype data (cell metadata) from the Seurat object
-pData <- mat@meta.data
-
-# Extract feature data from the Seurat object
-fData <- data.frame(gene_short_name = row.names(data), row.names = row.names(data))
-
-# Construct a Monocle CDS (cell_data_set) object
-cds <- new_cell_data_set(data, cell_metadata = pData, gene_metadata = fData)
-
-# Construct and assign the made up partition
-recreate.partition <- c(rep(1, length(cds@colData@rownames)))
-names(recreate.partition) <- cds@colData@rownames
-recreate.partition <- as.factor(recreate.partition)
-cds@clusters@listData[["UMAP"]][["partitions"]] <- recreate.partition
-
-# Assign the cluster info
-list_cluster <- Idents(object = mat)
-names(list_cluster) <- cds@colData@rownames
-cds@clusters@listData[["UMAP"]][["clusters"]] <- list_cluster
-
-# A space-holder to essentially fill out louvain parameters
-cds@clusters@listData[["UMAP"]][["louvain_res"]] <- "NA"
-
-# Assign UMAP coordinate
-# cds@reducedDims@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
-cds@reduce_dim_aux@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
-cds@reduce_dim_aux@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
-
-# Assign feature loading for downstream module analysis
-cds@preprocess_aux$gene_loadings <- mat@reductions[["pca"]]@feature.loadings
-
-# A space-holder needed for order_cells() function later on
-rownames(cds@principal_graph_aux[['UMAP']]$dp_mst) <- NULL
-colnames(cds@reduce_dim_aux@listData[["UMAP"]]) <- NULL
-cds@int_colData@listData$reducedDims@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
-
-#  these other ways for colnames are for different versions of the packages
-#colnames(cds@reducedDims$UMAP) <- NULL
-#colnames(cds@reduce_dim_aux@listData[["UMAP"]]) <- NULL
-
 
 ############### Trajectory analysis ###############
 
@@ -129,7 +132,7 @@ plot_cells(cds, color_cells_by = "Phase")
 dev.off()
 
 # Order the cells in pseudotime
-cds <- order_cells(cds)
+cds <- order_cells(cds, root_cells=opts$root.cells)
 
 pdf(paste(opts$output.file, "_cluster_ordered.pdf", sep=""))
 plot_cells(cds, color_cells_by = "cluster")
