@@ -129,22 +129,40 @@ for (colorby in colorbys){
     dev.off()
 }
 
-# Order the cells in pseudotime
-cds <- order_cells(cds, root_cells=opts$root.cells)
+# Order the cells in pseudotime, must have either root.cells or root.nodes specified
+if  ( (is.null( opts$root.cells ) && is.null( opts$root.nodes ) ) )  { 
+	 stop("No root cells or nodes specified as the start point for ordering. Skipping pseudotime ordering" )
+} else {
 
-post.colorbys =  unlist(strsplit(opts$plot.post.colorbys, ","))
-for (colorby in post.colorbys){
-    col = trimws(colorby)
-    pdf(paste(opts$output.file, "_", col, "_ordered.pdf", sep=""))
-    print(plot_cells(cds, color_cells_by = col))
+    if ( ! is.null(opts$root.cells) ){
+
+        cellList = unlist(strsplit(opts$root.cells,","))
+
+        cds <- order_cells(cds, root_cell=cellList)
+
+        
+    } else if (!is.null(opts$root.nodes)){ 
+
+        nodeList = unlist(strsplit(opts$root.nodes,","))
+      
+        cds <- order_cells(cds, root_nodes=nodeList)
+
+    }
+
+    post.colorbys =  unlist(strsplit(opts$plot.post.colorbys, ","))
+    for (colorby in post.colorbys){
+        col = trimws(colorby)
+        pdf(paste(opts$output.file, "_", col, "_ordered.pdf", sep=""))
+        print(plot_cells(cds, color_cells_by = col))
+        dev.off()
+    }
+
+    # always include the pseudotime ordered
+    pdf(paste(opts$output.file, "_pseudotime_ordered.pdf", sep=""))
+    plot_cells(cds, color_cells_by = "pseudotime")
     dev.off()
+
 }
-
-# always include the pseudotime ordered
-pdf(paste(opts$output.file, "_pseudotime_ordered.pdf", sep=""))
-plot_cells(cds, color_cells_by = "pseudotime")
-dev.off()
-
 print("Done")
 
 
