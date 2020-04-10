@@ -142,10 +142,11 @@ if  ( (is.null( opts$root.cells ) && is.null( opts$root.nodes ) ) )  {
 
         
     } else if (!is.null(opts$root.nodes)){ 
-
+        print(opts$root.nodes)
         nodeList = unlist(strsplit(opts$root.nodes,","))
-      
-        cds <- order_cells(cds, root_nodes=nodeList)
+        print(nodeList)
+        print("A")
+        cds <- order_cells(cds, root_pr_nodes=c(11))
 
     }
 
@@ -159,10 +160,11 @@ if  ( (is.null( opts$root.cells ) && is.null( opts$root.nodes ) ) )  {
 
     # always include the pseudotime ordered
     pdf(paste(opts$output.file, "_pseudotime_ordered.pdf", sep=""))
-    plot_cells(cds, color_cells_by = "pseudotime")
+    print(plot_cells(cds, color_cells_by = "pseudotime"))
     dev.off()
 
 }
+save(cds, file = paste(opts$output.file, "_", "monocle.robj", sep=""))
 print("Done")
 
 
