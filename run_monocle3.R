@@ -38,8 +38,11 @@ option_list <- list(
   make_option("--input.seurat.rds.file", dest="input.seurat.rds.file", default="notARealFilename.impossible"),
   make_option("--output.file", dest="output.file"),
   make_option("--input.10x.file", dest="input.10x.file", default="notARealFilename.impossible"),
-  make_option("--resolution", dest="resolution", type="double"),
-  make_option("--root.cells", dest="root.cells")
+  make_option("--root.cells", dest="root.cells"),
+  make_option("--root.nodes", dest="root.nodes"),
+  make_option("--plot.color.by", dest="plot.colorbys"),  
+  make_option("--plot.post.color.by", dest="plot.post.colorbys")
+  
 )
 
 # Parse the command line arguments with the option list, printing the result
@@ -96,9 +99,9 @@ if (file.exists(opts$input.seurat.rds.file)){
     colnames(cds@reduce_dim_aux@listData[["UMAP"]]) <- NULL
     cds@int_colData@listData$reducedDims@listData[["UMAP"]] <-mat@reductions[["umap"]]@cell.embeddings
 
-    #  these other ways for colnames are for different versions of the packages
+    #  this other ways for colnames are for different versions of the packages
     #colnames(cds@reducedDims$UMAP) <- NULL
-    #colnames(cds@reduce_dim_aux@listData[["UMAP"]]) <- NULL
+
 } else if (file.exists(opts$input.10x.file)){
     # instead of a seurat object, we are getting a zipped 10x genomics file
     
@@ -115,44 +118,34 @@ if (file.exists(opts$input.seurat.rds.file)){
 
 ############### Trajectory analysis ###############
 
-print("A")
 # Learn the trajectory graph
 cds <- learn_graph(cds)
-print("B")
-pdf(paste(opts$output.file, "_cluster.pdf", sep=""))
-plot_cells(cds, color_cells_by = "cluster")
-dev.off()
 
-pdf(paste(opts$output.file, "_orig_ident.pdf", sep=""))
-plot_cells(cds, color_cells_by = "orig.ident")
-dev.off()
-
-pdf(paste(opts$output.file, "_Phase.pdf", sep=""))
-plot_cells(cds, color_cells_by = "Phase")
-dev.off()
+colorbys =  unlist(strsplit(opts$plot.colorbys, ","))
+for (colorby in colorbys){
+    col = trimws(colorby)
+    pdf(paste(opts$output.file, "_", col, ".pdf", sep=""))
+    print(plot_cells(cds, color_cells_by = col))
+    dev.off()
+}
 
 # Order the cells in pseudotime
 cds <- order_cells(cds, root_cells=opts$root.cells)
 
-pdf(paste(opts$output.file, "_cluster_ordered.pdf", sep=""))
-plot_cells(cds, color_cells_by = "cluster")
-dev.off()
+post.colorbys =  unlist(strsplit(opts$plot.post.colorbys, ","))
+for (colorby in post.colorbys){
+    col = trimws(colorby)
+    pdf(paste(opts$output.file, "_", col, "_ordered.pdf", sep=""))
+    print(plot_cells(cds, color_cells_by = col))
+    dev.off()
+}
 
-pdf(paste(opts$output.file, "_orig_ident_ordered.pdf", sep=""))
-plot_cells(cds, color_cells_by = "orig.ident")
-dev.off()
-
+# always include the pseudotime ordered
 pdf(paste(opts$output.file, "_pseudotime_ordered.pdf", sep=""))
 plot_cells(cds, color_cells_by = "pseudotime")
 dev.off()
 
-pdf(paste(opts$output.file, "_Phase_ordered.pdf", sep=""))
-plot_cells(cds, color_cells_by = "Phase")
-dev.off()
-
-
-
-
+print("Done")
 
 
 
