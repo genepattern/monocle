@@ -54,8 +54,17 @@ opts <- opt$options
 mat=NULL
 
 if (file.exists(opts$input.seurat.rds.file)){
-    load(opts$input.seurat.rds.file, verbose=TRUE)	
+    filename = opts$input.seurat.rds.file
 
+    if (endsWith(tolower(filename), ".rds")) {
+        mat <- readRDS(opts$input.seurat.rds.file)
+    } else { 
+        # assumes just one object in the file
+        env = new.env()
+        matName <- load(filename, env, verbose=TRUE)[1]
+        mat <- env[[matName]]
+    }
+   
     ############### Converting Seurat object to Monocle ###############
 
     # Extract expression data (raw UMI counts) from the Seurat object
