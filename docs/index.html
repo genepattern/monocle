@@ -48,20 +48,22 @@
 
 <h2>Tool Description</h2>
 
-<h3>Input File</h3>
+<h3>Input Files</h3>
 
 <ul style="list-style-type:none;">
-	<li>tab delimited counts matrix</li>
+	<li>This module accepts either a zipped 10x Genomics file containing the counts and experiment row and column metadata or a Serurat SingleCellExperiment object in the R-language RDS or Robj formats.</li>
 	<li>&nbsp;</li>
-	next release of the tool will provide a selection for older genome version (e.g. GRCh37/hg19)</li>
 </ul>
 
 <h3>Output Files</h3>
 
 <ul style="list-style-type:none;">
-	<li><b>&lt;XXXXX&gt;.csv.zip</b><br/>
-	   The zip file contains .
+        <li><b>&lt;output_filename&gt;</b>_monocle.robji<br/>  binary serialize R object containing the Monocle SingleCellExperiment object.</li>
+	<li><b>&lt;output_filename&gt;_</b><plot_colorby>.pdf<br/> Plots of the datasetcolored by the parameters specified in the &lt;plot_colorby&gt; parameter with the branch graph overlayed prior to generating pseudotime mapping.<br/>
         </li>
+        <li><b>&lt;output_filename&gt;_</b><plot_post_colorby>.pdf<br/> Plots of the data colored by the parameters specified in the &lt;plot_post_colorby&gt; parameter with the pseudo-time trajecotry overlayed.<br/>
+        </li>
+
 </ul>
 
 
@@ -85,13 +87,35 @@
 			<th>Description</th>
 		</tr>
 		<tr>
-			<td>data file*</td>
-			<td>Input file in one of the supported OpenCRAVAT input file formats like VCF.</td>
+			<td>input seurat rds file*</td>
+			<td>A Serurat SingleCellExperiment object in the R-language RDS or Robj formats.</td>
 		</tr>
-        <tr>
-            <td>XXXX</td>
-            <td>XXXX</td> 
-        </tr>
+                <tr>
+                        <td>output filename</td>
+                        <td>Prefix used for the name of all generated output files.</td>
+                </tr>
+                <tr>
+                        <td>input 10x file</td>
+                        <td>A 10x Genomics xipped data file containing counts and experiment row/col metadata.</td>
+                </tr>
+ <tr>
+                        <td>root cells</td>
+                        <td>Root cells to identify initial state for pseudo-time ordering.</td>
+                </tr>
+                <tr>
+                        <td>root nodes</td>
+                        <td>Root nodes to identify initial state for pseudo-time ordering.</td>
+                </tr>
+                <tr>
+                        <td>plot colorby</td>
+                        <td>Phenotypic (column) information to color samples by in plots prior to pseudo-time ordering. Phenotype labels should be comma-delimited and must exist in the input dataset.</td>
+                </tr>
+                <tr>
+                        <td>plot post colorby</td>
+                        <td>Phenotypic (column) information to color samples by in plots after pseudo-time ordering is complete. A pseudo-time colored plot is always produced and does not need to be specified. Phenotype labels should be comma-delimited and must exist in the input dataset. </td>
+                </tr>
+
+
      </tbody>
 </table>
 </body></html>
