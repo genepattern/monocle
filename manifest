@@ -3,7 +3,7 @@ JVMLevel=
 LSID=urn\:lsid\:broad.mit.edu\:cancer.software.genepattern.module.analysis\:00413\:999999999
 author=Trapnell Lab, Broad Institute, Wrapped as a module by Ted Liefeld, UCSD School of Medicine.
 categories=SingleCell
-commandLine=Rscript --no-save --quiet --slave --no-restore /monocle/run_monocle3.R <input.seurat.rds.file> <output.filename> <input.10x.file> <root.cells> <root.nodes> <plot.colorby>  <plot.post.colorby>
+commandLine=Rscript --no-save --quiet --slave --no-restore /monocle/run_monocle3.R <input.seurat.rds.file> <output.filename> <input.10x.file> <root.cells> <root.nodes> <plot.colorby>  <plot.post.colorby> <plot.genes.along.trajectory>
 
 cpuType=any
 description=Performs Monocle3 trajectory analysis
@@ -12,7 +12,7 @@ language=any
 minGenePatternVersion=3.9.13
 name=Monocle
 os=any
-job.docker.image=genepattern/monocle
+job.docker.image=genepattern/monocle:0.1
 
 p1_MODE=IN
 p1_TYPE=FILE
@@ -111,6 +111,21 @@ p7_prefix=
 p7_prefix_when_specified=--plot.post.color.by      
 p7_type=java.lang.String
 p7_value=
+
+p8_MODE=
+p8_TYPE=
+p8_default_value=
+p8_description=Symbols for genes of interest to have their expression plotted along the pseudotime trajectory.
+p8_fileFormat=
+p8_flag=
+p8_name=plot.genes.along.trajectory
+p8_numValues=1
+p8_optional=on
+p8_prefix=
+p8_prefix_when_specified=--plot.genes.along.trajectory    
+p8_type=java.lang.String
+p8_value=
+
 
 privacy=public
 publicationDate=4/6/2020 14\:15 

@@ -1,0 +1,7 @@
+FROM genepattern/monocle:0.0
+
+RUN conda install --yes -c conda-forge/label/cf202003 r-systemfonts
+
+RUN apt-get update && apt-get install imagemagick --yes
+
+COPY run_monocle3.R /monocle/

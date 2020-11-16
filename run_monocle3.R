@@ -41,7 +41,8 @@ option_list <- list(
   make_option("--root.cells", dest="root.cells"),
   make_option("--root.nodes", dest="root.nodes"),
   make_option("--plot.color.by", dest="plot.colorbys"),  
-  make_option("--plot.post.color.by", dest="plot.post.colorbys")
+  make_option("--plot.post.color.by", dest="plot.post.colorbys"),
+  make_option("--plot.genes.along.trajectory", dest="plot.genes.along.trajectory")
   
 )
 
@@ -66,6 +67,8 @@ if (file.exists(opts$input.seurat.rds.file)){
     }
    
     ############### Converting Seurat object to Monocle ###############
+
+    gene_arr <- c('SPANXB1','S100A4','HIST1H1E')
 
     # Extract expression data (raw UMI counts) from the Seurat object
     # We are extracting raw UMI counts since Monocle 3 is designed
@@ -133,7 +136,7 @@ cds <- learn_graph(cds)
 colorbys =  unlist(strsplit(opts$plot.colorbys, ","))
 for (colorby in colorbys){
     col = trimws(colorby)
-    pdf(paste(opts$output.file, "_", col, ".pdf", sep=""))
+    png(paste(opts$output.file, "_", col, ".png", sep=""))
     print(plot_cells(cds, color_cells_by = col))
     dev.off()
 }
@@ -154,7 +157,6 @@ if  ( (is.null( opts$root.cells ) && is.null( opts$root.nodes ) ) )  {
         print(opts$root.nodes)
         nodeList = unlist(strsplit(opts$root.nodes,","))
         print(nodeList)
-        print("A")
         cds <- order_cells(cds, root_pr_nodes=c(11))
 
     }
@@ -162,16 +164,30 @@ if  ( (is.null( opts$root.cells ) && is.null( opts$root.nodes ) ) )  {
     post.colorbys =  unlist(strsplit(opts$plot.post.colorbys, ","))
     for (colorby in post.colorbys){
         col = trimws(colorby)
-        pdf(paste(opts$output.file, "_", col, "_ordered.pdf", sep=""))
+        png(paste(opts$output.file, "_", col, "_ordered.png", sep=""))
         print(plot_cells(cds, color_cells_by = col))
         dev.off()
     }
 
+ 
+    if (!is.null(opts$plot.genes.along.trajectory)){
+        gene_arr = unlist(strsplit(opts$plot.genes.along.trajectory,","))
+	for (gene in gene_arr){ 
+                # plot seperate for each gene
+		one_gene = c(gene)
+        	png(paste(opts$output.file, "_", gene,  "_expression.png", sep=""), type="cairo", family = "Helvetica" )
+        	print(plot_cells(cds, genes=one_gene, show_trajectory_graph=TRUE,
+        	   label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE, cell_size=0.5))
+        	dev.off()
+                print("A1")
+
+	}
+
+    }
     # always include the pseudotime ordered
-    pdf(paste(opts$output.file, "_pseudotime_ordered.pdf", sep=""))
+    png(paste(opts$output.file, "_pseudotime_ordered.png", sep=""))
     print(plot_cells(cds, color_cells_by = "pseudotime"))
     dev.off()
-
 }
 save(cds, file = paste(opts$output.file, "_", "monocle.robj", sep=""))
 print("Done")
