@@ -18,6 +18,7 @@ suppressMessages(suppressWarnings(library(optparse)))
 suppressMessages(suppressWarnings(library(dplyr)))
 suppressMessages(suppressWarnings(library(Seurat)))
 suppressMessages(suppressWarnings(library(monocle3)))
+library(S4Vectors)
 
 # Print the sessionInfo so that there is a listing of loaded packages, 
 # the current version of R, and other environmental information in our
