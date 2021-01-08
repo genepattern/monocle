@@ -134,12 +134,14 @@ if (file.exists(opts$input.seurat.rds.file)){
 # Learn the trajectory graph
 cds <- learn_graph(cds)
 
-colorbys =  unlist(strsplit(opts$plot.colorbys, ","))
-for (colorby in colorbys){
-    col = trimws(colorby)
-    png(paste(opts$output.file, "_", col, ".png", sep=""))
-    print(plot_cells(cds, color_cells_by = col))
-    dev.off()
+if (! is.null(opts$plot.colorbys)){
+    colorbys =  unlist(strsplit(opts$plot.colorbys, ","))
+    for (colorby in colorbys){
+        col = trimws(colorby)
+        png(paste(opts$output.file, "_", col, ".png", sep=""))
+        print(plot_cells(cds, color_cells_by = col))
+        dev.off()
+    }
 }
 
 # Order the cells in pseudotime, must have either root.cells or root.nodes specified
@@ -162,14 +164,15 @@ if  ( (is.null( opts$root.cells ) && is.null( opts$root.nodes ) ) )  {
 
     }
 
-    post.colorbys =  unlist(strsplit(opts$plot.post.colorbys, ","))
-    for (colorby in post.colorbys){
-        col = trimws(colorby)
-        png(paste(opts$output.file, "_", col, "_ordered.png", sep=""))
-        print(plot_cells(cds, color_cells_by = col))
-        dev.off()
+    if (! is.null(opts$plot.post.colorbys)){
+        post.colorbys =  unlist(strsplit(opts$plot.post.colorbys, ","))
+        for (colorby in post.colorbys){
+            col = trimws(colorby)
+            png(paste(opts$output.file, "_", col, "_ordered.png", sep=""))
+            print(plot_cells(cds, color_cells_by = col))
+            dev.off()
+        }
     }
-
  
     if (!is.null(opts$plot.genes.along.trajectory)){
         gene_arr = unlist(strsplit(opts$plot.genes.along.trajectory,","))

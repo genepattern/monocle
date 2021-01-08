@@ -1,6 +1,6 @@
 #Tue, 17 Dec 2019 14:15:10 -0800
 JVMLevel=
-LSID=urn\:lsid\:broad.mit.edu\:cancer.software.genepattern.module.analysis\:00413\:999999999
+LSID=urn\:lsid\:broad.mit.edu\:cancer.software.genepattern.module.analysis\:00413\:999999999.1
 author=Trapnell Lab, Broad Institute, Wrapped as a module by Ted Liefeld, UCSD School of Medicine.
 categories=SingleCell
 commandLine=Rscript --no-save --quiet --slave --no-restore /monocle/run_monocle3.R <input.seurat.rds.file> <output.filename> <input.10x.file> <root.cells> <root.nodes> <plot.colorby>  <plot.post.colorby> <plot.genes.along.trajectory>
@@ -12,7 +12,7 @@ language=any
 minGenePatternVersion=3.9.13
 name=Monocle
 os=any
-job.docker.image=genepattern/monocle:0.1
+job.docker.image=genepattern/monocle:0.2
 
 p1_MODE=IN
 p1_TYPE=FILE
